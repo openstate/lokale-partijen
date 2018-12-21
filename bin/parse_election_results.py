@@ -49,11 +49,14 @@ def get_local_parties_results(results, parties):
 
 
 def get_local_party_links(local_party, service, config):
-    search_results = service.cse().list(
-        q='%s %s' % (
-            local_party['Partij'].lower(),
-            local_party['RegioNaam'].lower(),), cx=config['google']['cx']).execute()
-    #print(json.dumps(search_results, indent=2))
+    try:
+        search_results = service.cse().list(
+            q='%s %s' % (
+                local_party['Partij'].lower(),
+                local_party['RegioNaam'].lower(),),
+            cx=config['google']['cx']).execute()
+    except Exception as e:
+        search_results = {'items': []}
     results = []
     facebook_links = 0
     website_links = 0
@@ -86,9 +89,9 @@ def main():
         "customsearch", "v1",
         developerKey=config['google']['dev_key'])
     for lp in local_parties:
-        lp['Sites'] = {y: x for x, y in get_local_party_links(lp, service, config)}
+        lp['Sites'] = {
+            y: x for x, y in get_local_party_links(lp, service, config)}
         all_results.append(lp)
-        #sys.stderr.write(".")
         sleep(1)
     print(json.dumps(all_results, indent=2))
     return 0
