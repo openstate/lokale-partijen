@@ -6,8 +6,15 @@ import re
 import csv
 from time import sleep
 import json
+import configparser
 
-from googlesearch import search
+from googleapiclient.discovery import build
+
+
+def load_config():
+    config = configparser.ConfigParser()
+    config.read('config.ini')
+    return config
 
 
 def import_results():
@@ -41,32 +48,49 @@ def get_local_parties_results(results, parties):
     return local_parties
 
 
-def get_local_party_links(local_party):
-    search_results = search(
-        '%s %s' % (local_party['Partij'].lower(), local_party['RegioNaam'].lower(),), stop=20)
+def get_local_party_links(local_party, service, config):
+    search_results = service.cse().list(
+        q='%s %s' % (
+            local_party['Partij'].lower(),
+            local_party['RegioNaam'].lower(),), cx=config['google']['cx']).execute()
+    #print(json.dumps(search_results, indent=2))
     results = []
-    for link in search_results:
+    facebook_links = 0
+    website_links = 0
+    for res in search_results['items']:
+        link = res['link']
         if (
+            (facebook_links == 0) and
             re.search('facebook\.com\/', link) and
             not re.search('\/posts\/', link)
         ):
             results.append((link, 'facebook'))
-        if re.search('\.(nl|nu|com)\/?$', link):
+            facebook_links += 1
+        if (
+            (website_links == 0) and
+            re.search('\.(nl|nu|com)\/?$', link)
+        ):
             results.append((link, 'website'))
+            website_links += 1
     return results
 
 
 def main():
+    config = load_config()
     results = import_results()
     parties = import_parties()
 
     all_results = []
     local_parties = get_local_parties_results(results, parties)
+    service = build(
+        "customsearch", "v1",
+        developerKey=config['google']['dev_key'])
     for lp in local_parties:
-        lp['Sites'] = {y: x for x, y in get_local_party_links(lp)}
+        lp['Sites'] = {y: x for x, y in get_local_party_links(lp, service, config)}
         all_results.append(lp)
+        #sys.stderr.write(".")
         sleep(1)
-    print(json.dumps(all_results))
+    print(json.dumps(all_results, indent=2))
     return 0
 
 if __name__ == '__main__':
