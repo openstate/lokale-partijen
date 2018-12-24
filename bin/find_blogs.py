@@ -45,7 +45,14 @@ def _find_blogging_feed(url, soup):
 
 def get_blog_info(party, config):
     result = deepcopy(party)
-    resp = requests.get(party['Sites']['website'])
+    try:
+        resp = requests.get(party['Sites']['website'])
+    except Exception as e:
+        resp = None
+
+    if resp is None:
+        return
+
     if resp.status_code >= 200 and resp.status_code < 300:
         soup = BeautifulSoup(resp.content, 'html.parser')
         result['engine'] = _find_blogging_engine(resp.url, soup)
