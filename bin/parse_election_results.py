@@ -71,7 +71,8 @@ def get_local_party_links(local_party, service, config):
             facebook_links += 1
         if (
             (website_links == 0) and
-            re.search('\.(nl|nu|com)\/?$', link)
+            re.search('\.(nl|nu|com)\/?$', link) and
+            not re.search('\.facebook\.com\/', link)
         ):
             results.append((link, 'website'))
             website_links += 1
