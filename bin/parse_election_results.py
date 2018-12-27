@@ -63,7 +63,7 @@ def normalize_party_name(full_party_name):
 def get_local_party_links(local_party, service, config):
     try:
         search_results = service.cse().list(
-            q='"%s" "%s"' % (
+            q='%s %s' % (
                 normalize_party_name(local_party['Partij']),
                 local_party['RegioNaam'].lower(),),
             cx=config['google']['cx']).execute()
@@ -72,7 +72,12 @@ def get_local_party_links(local_party, service, config):
     results = []
     facebook_links = 0
     website_links = 0
-    for res in search_results['items']:
+    try:
+        items = search_results['items']
+    except KeyError:
+        items = []
+
+    for res in items:
         link = res['link']
         if (
             (facebook_links == 0) and

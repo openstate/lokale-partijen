@@ -46,7 +46,8 @@ def _find_blogging_feed(url, soup):
 def get_blog_info(party, config):
     result = deepcopy(party)
     try:
-        resp = requests.get(party['Sites']['website'])
+        resp = requests.get(party['Sites']['website'], timeout=10)
+        sys.stderr.write("%s\n" % (party['Sites']['website'],))
     except Exception as e:
         resp = None
 
