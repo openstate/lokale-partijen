@@ -48,11 +48,23 @@ def get_local_parties_results(results, parties):
     return local_parties
 
 
+def normalize_party_name(full_party_name):
+    parts = [x.strip() for x in full_party_name.rsplit('(', 1)]
+    if len(parts) == 1:
+        result = full_party_name
+    else:
+        if len(parts[1]) > len(parts[0]):
+            result = parts[1].replace(')', '')
+        else:
+            result = parts[0]
+    return result.lower()
+
+
 def get_local_party_links(local_party, service, config):
     try:
         search_results = service.cse().list(
             q='%s %s' % (
-                local_party['Partij'].lower(),
+                normalize_party_name(local_party['Partij']),
                 local_party['RegioNaam'].lower(),),
             cx=config['google']['cx']).execute()
     except Exception as e:
