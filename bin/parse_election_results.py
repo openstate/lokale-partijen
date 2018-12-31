@@ -60,7 +60,28 @@ def normalize_party_name(full_party_name):
     return result.lower()
 
 
+def get_party_name_parts(full_party_name, region):
+    parts = [x.strip() for x in full_party_name.rsplit('(', 1)]
+    if len(parts) == 1:
+        result = re.split('(\s+|\-|/|\.|\')', full_party_name)
+    else:
+        result = re.split('(\s+|\-|/|\.|\')', parts[0]) + re.split('(\s+|\-|/|\.|\')', parts[1].replace(')', ''))
+    result += re.split('(\s+|\-|/|\.|\')', region)
+    better = [re.sub('(\.|\s*|\')', '', x).strip().lower() for x in result]
+    return [x for x in better if re.sub('(\s+|\-|/|\.|\')', '', x).strip() != '']
+
+
+def count_parts_present(parts, website):
+    num_parts = 0
+    for part in parts:
+        if part.lower() in website.lower():
+            num_parts += 1
+    return num_parts
+
+
 def get_local_party_links(local_party, service, config):
+    name_parts = get_party_name_parts(
+        local_party['Partij'], local_party['RegioNaam'])
     try:
         search_results = service.cse().list(
             q='%s %s' % (
@@ -79,6 +100,10 @@ def get_local_party_links(local_party, service, config):
 
     for res in items:
         link = res['link']
+        try:
+            num_match = count_parts_present(name_parts, res['title'])
+        except LookupError as e:
+            num_match = 0
         if (
             (facebook_links == 0) and
             re.search('facebook\.com\/', link) and
@@ -89,7 +114,8 @@ def get_local_party_links(local_party, service, config):
         if (
             (website_links == 0) and
             re.search('\.(nl|nu|com)\/?$', link) and
-            not re.search('\.facebook\.com\/', link)
+            not re.search('\.facebook\.com\/', link) and
+            (num_match > 0)
         ):
             results.append((link, 'website'))
             website_links += 1
