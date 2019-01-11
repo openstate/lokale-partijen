@@ -44,7 +44,7 @@ def get_feed_info(party, config):
     else:
         avg_len = 141  # assume?
 
-    result['full_content'] = (avg_len > 140)
+    result['full_content'] = (avg_len > 300)
 
     return result
 
@@ -59,6 +59,10 @@ def main():
             res = get_feed_info(party, config)
             if res is not None:
                 parties_with_blogs.append(res)
+            else:
+                parties_with_blogs.append(party)
+        else:
+            parties_with_blogs.append(party)
     print(json.dumps(parties_with_blogs, indent=2))
     return 0
 

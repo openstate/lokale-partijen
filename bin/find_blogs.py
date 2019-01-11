@@ -70,6 +70,10 @@ def main():
             res = get_blog_info(party, config)
             if res is not None:
                 parties_with_blogs.append(res)
+            else:
+                parties_with_blogs.append(party)
+        else:
+            parties_with_blogs.append(party)
     print(json.dumps(parties_with_blogs, indent=2))
     return 0
 
